@@ -1,0 +1,778 @@
+
+rm(list=ls())
+
+library(sp)
+library(gstat)
+library(spacetime) 
+library(raster) 
+library(rgdal) 
+library(rgeos)
+
+#library(dplyr) 
+#library(ggplot2)
+#library(scales)
+#library(magrittr)
+#library(mapplots)
+
+options(max.print = 999999999)
+
+## =======================================================================
+# Importation des données
+## =======================================================================
+
+data1<-read.table("cemob-miate-540-N1.txt",header = TRUE)
+data2<-read.table("cemob-miate-540-N2.txt",header = TRUE)
+data3<-read.table("cemob-miate-540-N3.txt",header = TRUE)
+data4<-read.table("cemob-miate-540-N4.txt",header = TRUE)
+data5<-read.table("cemob-miate-540-N5.txt",header = TRUE)
+data6<-read.table("cemob-miate-540-N6.txt",header = TRUE)
+data7<-read.table("topo-miate-540.txt",header = TRUE)
+
+## ==========================================================================
+#Détourage de la nappe
+## ==========================================================================
+
+data2[,1]<-data2[,1]+0.0001
+data3[,1]<-data2[,1]+0.0002
+data4[,1]<-data2[,1]+0.0003
+data5[,1]<-data2[,1]+0.0004
+data6[,1]<-data2[,1]+0.0005
+
+k<-6
+l<-2.5
+m<-(-6)
+
+data<-data.frame(data1,data2,data3,data4,data5,data6)
+
+data[,3][(data[,1]>k)] <- 0
+data[,3][(data[,1]<(-k))] <- 0
+data[,3][(data[,2]>l)] <- 0
+data[,3][(data[,2]<m)] <- 0
+data[,3]!=0
+data<-data[data[,3]!=0,]
+
+#for(i in seq(3,ncol(data),by=3)) {
+#data[,i][(data[,(i-2)]>k)] <- 0
+#data[,i][(data[,(i-2)]<(-k))] <- 0
+#data[,i][(data[,(i-1)]>l)] <- 0
+#data[,i][(data[,(i-1)]<m)] <- 0
+#data[,i]!=0
+#data<-data[data[,i]!=0,] }
+
+data1<-(data[,1:3])
+data2<-(data[,4:6])
+colnames(data2)<-c("X","Y","Z")
+data3<-(data[,7:9])
+colnames(data3)<-c("X","Y","Z")
+data4<-(data[,10:12])
+colnames(data4)<-c("X","Y","Z")
+data5<-(data[,13:15])
+colnames(data5)<-c("X","Y","Z")
+data6<-(data[,16:18])
+colnames(data6)<-c("X","Y","Z")
+
+library(rgl)
+spheres3d(data1,col=2,radius = 0.1)
+spheres3d(data2,col=3,radius = 0.1)
+spheres3d(data3,col=4,radius = 0.1)
+spheres3d(data4,col=5,radius = 0.1)
+spheres3d(data5,col=6,radius = 0.1)
+spheres3d(data5,col=7,radius = 0.1)
+
+
+## =======================================================================
+# Troisième dimension : Le temps
+## =======================================================================
+
+X1<-data.frame(data1$X)
+Y1<-data.frame(data1$Y)
+Z1<-data.frame(data1$Z)
+T1<-data.frame((1:nrow(Y1))*0)
+
+for(i in 1:(nrow(Y1)-1)) {
+if ((Y1[i+1,])==(Y1[(i),]))
+T1[i+1,]=T1[(i),]
+else T1[i+1,]=T1[(i),]+2};
+
+data1<-data.frame(X1,Y1,Z1,T1)
+colnames(data1)<-c("X","Y","Z","T")
+
+w1 <- format(T1, format = "%M:%s")
+
+X2<-data.frame(data2$X)
+Y2<-data.frame(data2$Y)
+Z2<-data.frame(data2$Z)
+T2<-data.frame(((1:nrow(Y2))*0)+(max(T1)+2))
+
+for(i in 1:(nrow(Y2)-1)) {
+if ((Y2[i+1,])==(Y2[(i),]))
+T2[i+1,]=T2[(i),]
+else T2[i+1,]=T2[(i),]+2};
+
+data2<-data.frame(X2,Y2,Z2,T2)
+colnames(data2)<-c("X","Y","Z","T")
+
+X3<-data.frame(data3$X)
+Y3<-data.frame(data3$Y)
+Z3<-data.frame(data3$Z)
+T3<-data.frame(((1:nrow(Y3))*0)+(max(T2)+2))
+
+for(i in 1:(nrow(Y3)-1)) {
+if ((Y3[i+1,])==(Y3[(i),]))
+T3[i+1,]=T3[(i),]
+else T3[i+1,]=T3[(i),]+2};
+
+data3<-data.frame(X3,Y3,Z3,T3)
+colnames(data3)<-c("X","Y","Z","T")
+
+X4<-data.frame(data4$X)
+Y4<-data.frame(data4$Y)
+Z4<-data.frame(data4$Z)
+T4<-data.frame(((1:nrow(Y4))*0)+(max(T3)+2))
+
+for(i in 1:(nrow(Y4)-1)) {
+if ((Y4[i+1,])==(Y4[(i),]))
+T4[i+1,]=T4[(i),]
+else T4[i+1,]=T4[(i),]+2};
+
+data4<-data.frame(X4,Y4,Z4,T4)
+colnames(data4)<-c("X","Y","Z","T")
+
+X5<-data.frame(data5$X)
+Y5<-data.frame(data5$Y)
+Z5<-data.frame(data5$Z)
+T5<-data.frame(((1:nrow(Y5))*0)+(max(T4)+2))
+
+for(i in 1:(nrow(Y5)-1)) {
+if ((Y5[i+1,])==(Y5[(i),]))
+T5[i+1,]=T5[(i),]
+else T5[i+1,]=T5[(i),]+2};
+data5<-data.frame(X5,Y5,Z5,T5)
+colnames(data5)<-c("X","Y","Z","T")
+
+X6<-data.frame(data6$X)
+Y6<-data.frame(data6$Y)
+Z6<-data.frame(data6$Z)
+T6<-data.frame(((1:nrow(Y6))*0)+(max(T5)+2))
+
+for(i in 1:(nrow(Y6)-1)) {
+if ((Y6[i+1,])==(Y6[(i),]))
+T6[i+1,]=T6[(i),]
+else T6[i+1,]=T6[(i),]+2};
+data6<-data.frame(X6,Y6,Z6,T6)
+colnames(data6)<-c("X","Y","Z","T")
+
+#dataCemob<-rbind(data1,data2,data3)
+#dataCemob<-rbind(data1,data2)
+#dataCemob<-rbind(data1)
+dataCemob<-rbind(data1,data2,data3,data4,data5,data6)
+
+TdataCemob<-data.frame(dataCemob$T)
+
+TdataCemob<-strptime(dataCemob$T, "%s")
+
+#dataCemob$T<-TdataCemob
+
+## https://www.r-bloggers.com/spatio-temporal-kriging-in-r/
+
+## ==========================================================================
+#Grid for the spreading map
+## ==========================================================================
+
+#	===========
+#	n1 <- 0.5
+#	Xmin <- -13.75
+#	Xmax <- 12.25
+#	Ymin <- -16.75
+#	Ymax <- 5.25
+#	===========
+
+#Xmin <- Xmin*1/n1
+#Xmax <- Xmax*1/n1
+#Ymin <- Ymin*1/n1
+#Ymax <- Ymax*1/n1
+#datagrid<-expand.grid((Xmin:Xmax),(Ymin:Ymax))
+#names(datagrid)<-c("X","Y")
+#datagrid<-datagrid/(1/n1)
+
+## ==========================================================================
+#Détourage de la nappe
+## ==========================================================================
+
+#n<-0.01
+
+#dataCemob[,3][(dataCemob[,3]<n)] <- 0
+
+##Supression des données 
+#dataCemob[,3]!=0
+#dataCemob<-dataCemob[dataCemob[,3]!=0,]
+
+#library(rgl)
+#Plot<-data.frame(dataCemob$X,dataCemob$Y,dataCemob$Z*100)
+#spheres3d(Plot,col=2,radius = 0.1)
+
+## =======================================================================
+# Créer des objets STIDF
+## =======================================================================
+
+#Create a SpatialPointsDataFrame
+coordinates(dataCemob)=~Y+X
+CemobCoords<-data.frame(dataCemob$X,dataCemob$Y)  
+
+CemobCoords <- SpatialPoints ( CemobCoords)
+Dupl <- zerodist ( CemobCoords  ) 
+CemobDF <- data.frame ( dataCemob$Z )
+CemobT <- as.POSIXct ( TdataCemob)
+TimeDF <- STIDF ( CemobCoords , CemobT , data = CemobDF )
+
+stplot ( TimeDF ) 
+
+
+## =======================================================================
+# Variogramme
+## =======================================================================
+
+Z<-dataCemob$Z
+Var <- variogramST ( Z ~ 1 , data = TimeDF)
+
+, tunit = "secs" , assumeRegular = F , na.omit = T )
+ 
+
+
+
+1
+
+
+
+
+
+
+
+
+
+
+
+
+
+## =======================================================================
+#Dataset
+## =======================================================================
+
+data1N<-data8
+
+x11()
+ggplot(data1N,aes(X, Y))+geom_point(aes(size=Z))
+x11()
+ggplot(data8N,aes(X, Y))+geom_point(aes(size=Z))
+x11()
+i<-ggplot(data8N,aes(X,Y))
+i+stat_density2d(contour = TRUE, n = 100)
+x11()
+j<-ggplot(data1N,aes(X,Y))
+i+stat_density2d(contour = TRUE, n = 100)
+
+
+
+## =======================================================================
+#Converting to an SPDF
+## =======================================================================
+
+coordinates(data1N) <- ~ X + Y
+class(data1N)
+str(data1N)
+bbox(data1N)
+coordinates(data1N) %>% glimpse
+proj4string(data1N)
+identical(bbox(data1N), data1N@bbox)
+identical(coordinates(data1N), data1N@coords)
+data1N@data %>% glimpse
+data1N %>% as.data.frame %>% glimpse
+
+coordinates(data8N) <- ~ X + Y
+class(data8N)
+str(data8N)
+bbox(data8N)
+coordinates(data8N) %>% glimpse
+proj4string(data8N)
+identical(bbox(data8N), data8N@bbox)
+identical(coordinates(data8N), data8N@coords)
+data8N@data %>% glimpse
+data8N %>% as.data.frame %>% glimpse
+
+## =======================================================================
+#Fitting a variogram
+## =======================================================================
+
+
+data1Nvario <- variogram(Z~1, data1N) # calculates sample variogram values 
+plot(data1Nvario)
+data1Nfit <- fit.variogram(model=vgm(psill = NA, "Sph",NA, NA)) # fit model
+x11()
+plot(data1Nvario, data1Nfit) # plot the sample values, along with the fit model
+# optimize the value of kappa in a Matern model, using ugly <<- side effect:
+f1 = function(x) attr(m1.fit <<- fit.variogram(data1Nvario, vgm(,"Mat",nugget=NA,kappa=x)),"SSErr")
+optimize(f1, c(0.1, 5))
+x11()
+plot(data1Nvario, m1.fit)
+# best fit from the (0.3, 0.4, 0.5. ... , 5) sequence:
+(m1 <- fit.variogram(data1Nvario, vgm("Mat"), fit.kappa = TRUE))
+attr(m1, "SSErr")
+x11()
+plot(data1Nvario, m1)
+
+data8Nvario <- variogram(Z~1, data8N) # calculates sample variogram values 
+data8Nfit <- fit.variogram(data8Nvario,model=vgm(psill = NA, "Sph", NA, NA)) # fit model
+x11()
+plot(data8Nvario, data8Nfit) # plot the sample values, along with the fit model
+# optimize the value of kappa in a Matern model, using ugly <<- side effect:
+f8 = function(x) attr(m8.fit <<- fit.variogram(data8Nvario, vgm(,"Mat",nugget=NA,kappa=x)),"SSErr")
+optimize(f8, c(0.1, 5))
+x11()
+plot(data8Nvario, m8.fit)
+# best fit from the (0.3, 0.4, 0.5. ... , 5) sequence:
+(m8 <- fit.variogram(data8Nvario, vgm("Mat"), fit.kappa = TRUE))
+attr(m8, "SSErr")
+x11()
+plot(data8Nvario, m8)
+
+## =======================================================================
+#Performing Kriging
+## =======================================================================
+
+
+
+## ==========================================================================
+#Détourage de la nappe
+## ==========================================================================
+
+# to compare, recall the bubble plot above; those points were what there were values for. this is much more sparse
+data1NKriging1<- data1N %>% as.data.frame %>%
+  ggplot(aes(X, Y)) + geom_point(size=1) + coord_equal() + 
+  ggtitle("Points with measurements")
+
+x11()
+data1NKriging1
+
+# this is clearly gridded over the region of interest
+data1NKriging2 <- datagrid %>% as.data.frame %>%
+  ggplot(aes(X, Y)) + geom_point(size=1) + coord_equal() + 
+  ggtitle("Points at which to estimate")
+
+x11()
+data1NKriging2
+
+x11()
+library(gridExtra)
+grid.arrange(data1NKriging1,data1NKriging2, ncol = 2)
+
+#==========
+
+# to compare, recall the bubble plot above; those points were what there were values for. this is much more sparse
+data8NKriging1<- data8N %>% as.data.frame %>%
+  ggplot(aes(X, Y)) + geom_point(size=1) + coord_equal() + 
+  ggtitle("Points with measurements")
+
+x11()
+data8NKriging1
+
+# this is clearly gridded over the region of interest
+data8NKriging2 <- datagrid %>% as.data.frame %>%
+  ggplot(aes(X, Y)) + geom_point(size=1) + coord_equal() + 
+  ggtitle("Points at which to estimate")
+
+x11()
+data8NKriging2
+
+x11()
+library(gridExtra)
+grid.arrange(data8NKriging1,data8NKriging2, ncol = 2)
+
+## =======================================================================
+#Computation
+## =======================================================================
+
+#n<-0.01
+
+#data1[,3][(data1[,3]<n)] <- 0
+#data2[,3][(data2[,3]<n)] <- 0
+#data3[,3][(data3[,3]<n)] <- 0
+#data4[,3][(data4[,3]<n)] <- 0
+#data5[,3][(data5[,3]<n)] <- 0
+#data6[,3][(data6[,3]<n)] <- 0
+#data7[,3][(data7[,3]<n)] <- 0
+#data8[,3][(data8[,3]<n)] <- 0
+
+#Supression des données 
+#data1[,3]!=0
+#data2[,3]!=0
+#data3[,3]!=0
+#data4[,3]!=0
+#data5[,3]!=0
+#data6[,3]!=0
+#data7[,3]!=0
+#data8[,3]!=0
+
+#data1N2<-data1[data1[,3]!=0,]
+#data2N2<-data2[data2[,3]!=0,]
+#data3N2<-data3[data3[,3]!=0,]
+#data4N2<-data4[data4[,3]!=0,]
+#data5N2<-data5[data5[,3]!=0,]
+#data6N2<-data6[data6[,3]!=0,]
+#data7N2<-data7[data7[,3]!=0,]
+#data8N2<-data8[data8[,3]!=0,]
+
+
+x <- krige.cv(Z~1, data1N, m1, nmax = 40, nfold=5)
+bubble(x, "residual", main = "log(zinc): 5-fold CV residuals")
+
+bubble(x, "residual", main = "residuals")
+x11()
+bubble(x, "var1.pred", main = "var1.pred")
+x11()
+bubble(x, "var1.var", main = "var1.var")
+x11()
+bubble(x, "zscore", main = "zscore")
+x11()
+bubble(dataN1,"dataN1", main = "dataN1")
+
+f<-data.frame(x[,1])
+e<-data.frame(x[,3])
+
+spheres3d(f,col=4,radius = 0.1)
+spheres3d(e,col=3,radius = 0.1)
+
+
+## =JCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC====================
+coordinates(datagrid) <- ~ X + Y # step 3 above
+#data1kriged <- krige(Z~X+Y, data1N, datagrid, model=m1)
+data1kriged <- krige.cv(Z~1, data1N, datagrid, model=m1)
+data1kriged %>% as.data.frame %>%
+  ggplot(aes(x=X, y=Y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="red") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+
+x<-data1kriged 
+x[1,]
+
+f<-data.frame(x[,7],x[,8],x[,1]*100)
+e<-data.frame(x[,7],x[,8],x[,3]*100)
+
+
+spheres3d(f,col=4,radius = 0.1)
+spheres3d(e,col=3,radius = 0.1)
+
+## =====================
+
+
+
+
+w<-data1kriged
+v<-data1kriged
+x<-w
+
+data1kriged[1,]
+
+
+x11()
+bubble(x, "residual", main = "residuals")
+x11()
+bubble(x, "var1.pred", main = "var1.pred")
+x11()
+bubble(x, "var1.var", main = "var1.var")
+x11()
+bubble(x, "zscore", main = "zscore")
+x11()
+bubble(dataN1,"dataN1", main = "dataN1")
+
+
+data1kriged
+
+e<-data.frame(data1kriged$X,data1kriged$Y,data1kriged$var1.pred*100)
+f<-data.frame(data1kriged$X,data1kriged$Y,data1kriged$var1.var*100)
+g<-data.frame(data1kriged$X,data1kriged$Y,data1kriged$observed*100)
+
+library(rgl)
+
+spheres3d(e,col=2,radius = 0.1)
+spheres3d(f,col=4,radius = 0.1)
+spheres3d(g,col=5,radius = 0.1)
+
+
+
+
+
+
+
+#################################################################################
+#################################################################################
+#################################################################################
+
+# generate 5 conditional simulations
+library(sp)
+coordinates(data1N2)=~X+Y
+#v <- variogram(Z~1,data1N2)
+#m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
+plot(v, model = m1)
+set.seed(131)
+#data()
+gridded(datagrid) = ~X+Y
+sim <- krige.cv(formula = Z~1, data1N2, datagrid, model = m1)
+,
+nmax = 10, beta = 5.9, nsim = 5) # for speed -- 10 is too small!!
+# show all 5 simulation
+sim2 <-sim
+sim2 <-data.frame (sim)
+spplot(sim)
+
+x11()
+bubble(sim2, "var1.pred", main = "var1.pred")
+
+
+# calculate generalised least squares residuals w.r.t. constant trend:
+g <- gstat(NULL, "log.zinc", Z~1, data1N, model = m1)
+blue0 <- predict(g, newdata = data1N, BLUE = TRUE)
+blue0$blue.res <- log(data1N$Z) - blue0$log.zinc.pred
+bubble(blue0, zcol = "blue.res", main = "GLS residuals w.r.t. constant")
+
+# unconditional simulation on a 100 x 100 grid
+#xy <- expand.grid(1:100, 1:100)
+#names(xy) <- c("x","y")
+datagrid(xy) = ~X+Y
+g.dummy <- gstat(formula = Z~1, dummy = TRUE, beta = 0,
+model = m1, nmax = 10) # for speed -- 10 is too small!!
+yy <- predict(g.dummy, xy, nsim = 4)
+# show one realisation:
+spplot(yy[1])
+# show all four:
+spplot(yy)
+
+
+# unconditional simulation on a 100 x 100 grid
+xy <- expand.grid(1:100, 1:100)
+names(xy) <- c("x","y")
+gridded(xy) = ~x+y
+g.dummy <- gstat(formula = z~1, dummy = TRUE, beta = 0,
+model = vgm(1,"Exp",15), nmax = 10) # for speed -- 10 is too small!!
+yy <- predict(g.dummy, xy, nsim = 4)
+# show one realisation:
+spplot(yy[1])
+# show all four:
+spplot(yy)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(sp)
+data(meuse)
+coordinates(meuse) <- ~x+y
+m <- vgm(.59, "Sph", 874, .04)
+# five-fold cross validation:
+
+plot(data1Nvario, m1)
+
+x <- https://rpubs.com/nabilabd/118172.cv(c)~1, meuse, m, nmax = 40, nfold=5)
+bubble(x, "residual", main = "log(zinc): 5-fold CV residuals")
+# multivariable; thanks to M. Rufino:
+meuse.g <- gstat(id = "zn", formula = log(zinc) ~ 1, data = meuse)
+meuse.g <- gstat(meuse.g, "cu", log(copper) ~ 1, meuse)
+meuse.g <- gstat(meuse.g, model = vgm(1, "Sph", 900, 1), fill.all = TRUE)
+x <- variogram(meuse.g, cutoff = 1000)
+meuse.fit = fit.lmc(x, meuse.g)
+out = gstat.cv(meuse.fit, nmax = 40, nfold = 5)
+summary(out)
+out = gstat.cv(meuse.fit, nmax = 40, nfold = c(rep(1,100), rep(2,55)))
+summary(out)
+# multivariable; thanks to M. Rufino:
+meuse.g <- gstat(id = "zn", formula = log(zinc) ~ 1, data = meuse)
+meuse.g <- gstat(meuse.g, "cu", log(copper) ~ 1, meuse)
+meuse.g <- gstat(meuse.g, model = vgm(1, "Sph", 900, 1), fill.all = TRUE)
+x <- variogram(meuse.g, cutoff = 1000)
+meuse.fit = fit.lmc(x, meuse.g)
+out = gstat.cv(meuse.fit, nmax = 40, nfold = 5)
+summary(out)
+out = gstat.cv(meuse.fit, nmax = 40, nfold = c(rep(1,100), rep(2,55)))
+summary(out)
+
+
+
+
+
+
+coordinates(data1N) <- ~X+Y
+g <- gstat(id = "ln.zinc", formula = Z~1, data = data1N)
+x <- variogram(g, cutoff = 1000)
+
+coordinates(datagrid)<-~X+Y 
+m <- vgm(NA, "Sph",NA,NA)
+# five-fold cross validation:
+x <- krige.cv(Z~1,data1N,m1)
+x11()
+bubble(x, "residual", main = "residuals")
+x11()
+bubble(x, "var1.pred", main = "var1.pred")
+x11()
+bubble(x, "var1.var", main = "var1.var")
+x11()
+bubble(x, "zscore", main = "zscore")
+x11()
+bubble(dataN1,"dataN1", main = "dataN1")
+
+# multivariable; thanks to M. Rufino:
+data1N.g <- gstat(id = "zn", formula = Z ~ 1, data = data1N)
+data1N.g <- gstat(data1N.g, "cu", data8N ~ 1, data1N)
+data1N.g <- gstat(data1N.g, model = vgm(NA, "Sph",NA,NA), fill.all = TRUE)
+x <- variogram(data1N.g)
+, cutoff = 1000)
+data1N.fit = fit.lmc(x, data1N.g)
+out = gstat.cv(data1N.fit, nmax = 40, nfold = 5)
+summary(out)
+out = gstat.cv(data1N.fit, nmax = 40, nfold = c(rep(1,100), rep(2,55)))
+summary(out)
+
+x %>% as.data.frame %>%
+  ggplot(aes(x=X, y=Y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="red") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+xAfterKriged<-data.frame(x$X,x$Y,x$var1.pred*100)
+
+## ===============
+#coordinates(datagrid) <- ~ X + Y # step 3 above
+#data1kriged <- krige(Z~1, data1N, datagrid, model=m1)
+#data1kriged %>% as.data.frame %>%
+#  ggplot(aes(x=X, y=Y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+#  scale_fill_gradient(low = "yellow", high="red") +
+#  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+#  theme_bw()
+## ===============
+#data1kriged <- krige(Z~1, data1N, datagrid, model=m1)
+#x11()
+#spplot(data1kriged["var1.pred"], main = "ordinary kriging predictions")
+#x11()
+#spplot(data1kriged["var1.var"], main = "ordinary kriging variance")
+#data1kriged[1,]
+#x <- krige(Z~X+Y,  data1N, datagrid, model=m1)
+#spplot(x["var1.pred"], main = "universal kriging predictions")
+## ===============
+
+
+
+library(kriging)
+# Krige random data for a specified area using a list of polygons
+library(maps)
+usa <- map("usa", "main", plot = FALSE)
+p <- list(data.frame(data1N$x, data1N$y))
+# Create some random data
+x <- runif(50, min(p[[1]][,1]), max(p[[1]][,1]))
+y <- runif(50, min(p[[1]][,2]), max(p[[1]][,2]))
+z <- rnorm(50)
+# Krige and create the map
+kriged <- kriging(data1N$X, data1N$Y, data1N$Z,
+model = "spherical", lags = 10, pixels = 100, polygons = NULL)
+image(kriged)
+, xlim = extendrange(x), ylim = extendrange(y))
+
+
+
+
+
+library(geoR)
+
+
+## =======24/04/17
+x11()
+coordinates(datagrid) <- ~X+Y # step 3 above
+data1kriged <- krige.control(Z~1, data8N, datagrid, model=m1)
+
+krige.conv(geodata, coords=geodata$coords, data=geodata$data,
+locations, borders, krige, output)
+
+
+
+## =======
+
+data8kriged %>% as.data.frame %>%
+  ggplot(aes(x=X, y=Y)) + geom_tile(aes(fill=var1.pred)) + coord_equal() +
+  scale_fill_gradient(low = "yellow", high="red") +
+  scale_x_continuous(labels=comma) + scale_y_continuous(labels=comma) +
+  theme_bw()
+
+library(scatterplot3d)
+data1AfterKriged<-data.frame(data1kriged$X,data1kriged$Y,data1kriged$observed*100)
+
+e<-data1AfterKriged<-data.frame(data1kriged$X,data1kriged$Y,data1kriged$var1.pred*100)
+
+s3d<-scatterplot3d(data1AfterKriged,box=FALSE,pch = 20,type="p",
+angle =80,zlab="Q standardize [%Qtotal]",xlab = "Width [m]", ylab = "Length [m]",
+xlim=c(-5,100),ylim=c(-60,5))
+
+data8AfterKriged<-data.frame(data8kriged$X,data8kriged$Y,data8kriged$observed)
+s3d<-scatterplot3d(data8AfterKriged,box=FALSE,pch = 20,type="p",
+angle =80,zlab="Q standardize [%Qtotal]",xlab = "Width [m]", ylab = "Length [m]",
+xlim=c(-5,100),ylim=c(-60,5))
+
+data1N<-data.frame(data1N$X,data1N$Y,data1N$Z*100)
+
+library(rgl)
+
+spheres3d(data1AfterKriged,col=2,radius = 0.1)
+spheres3d(xAfterKriged,col=15,radius = 0.1)
+spheres3d(e,col=15,radius = 0.1)
+spheres3d(data1N,col=11,radius = 0.1)#
+spheres3d(data8AfterKriged,col=4,radius = 0.1)#
+
+
+spheres3d(sim[,7],sim[,8],sim[,1],col=15,radius = 0.1)
+
+spheres3d(sim2[,7],sim2[,8],sim2[,1]*100,col=14,radius = 0.1)
+spheres3d(sim2[,7],sim2[,8],sim2[,3]*100,col=15,radius = 0.1)
+
+## ==========================================================================
+# Passing and Bablok(1983, 1984)
+## ==========================================================================
+
+library(akima)
+## ==========================================================================
+#Grid for the spreading map
+## ==========================================================================
+
+data8kriged$observed[,3][(data1[,3]<n)] <- 0
+
+spheres3d(wm,col=5,radius = 0.1)#
+spheres3d(w7,col=6,radius = 0.1)#
+
+library(mcr)
+
+model1<- mcreg(data1kriged$observed,data8kriged$observed, alpha = 0.5, mref.name =  "CEMOB",
+mtest.name = "IMOB", sample.names = NULL, method.reg = "PaBaLarge", method.ci = "bootstrap",
+method.bootstrap.ci = "quantile",
+nsamples = 999, nnested = 25, rng.seed = NULL,
+rng.kind = "Mersenne-Twister", iter.max = 30, threshold = 1e-06,
+na.rm = TRUE, NBins = 1e+06, slope.measure = "radian")
+
+#getData<-getData(model1)
+
+## ========
+# Results
+## ========
+
+printSummary(model1)
+getCoefficients(model1)
+x11()
+plot(model1,xlim=c(0,15),ylim=c(0,15))
+x11()
+compareFit(model1)
+x11()
+MCResultResampling.plotBootstrapCoefficients(model1)
+
