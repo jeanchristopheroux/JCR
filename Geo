@@ -1,4 +1,3 @@
-#"""""""""""" Modification """""""""""
 rm(list=ls())
 
 library(sp)
@@ -17,7 +16,7 @@ library(rgeos)
 options(max.print = 999999999)
 
 ## =======================================================================
-# Importation des données
+# Importation des donnÃ©es
 ## =======================================================================
 
 data1<-read.table("cemob-miate-540-N1.txt",header = TRUE)
@@ -29,7 +28,7 @@ data6<-read.table("cemob-miate-540-N6.txt",header = TRUE)
 data7<-read.table("topo-miate-540.txt",header = TRUE)
 
 ## ==========================================================================
-#Détourage de la nappe
+#DÃ©tourage de la nappe
 ## ==========================================================================
 
 data2[,1]<-data2[,1]+0.0001
@@ -81,7 +80,7 @@ spheres3d(data5,col=7,radius = 0.1)
 
 
 ## =======================================================================
-# Troisième dimension : Le temps
+# TroisiÃ¨me dimension : Le temps
 ## =======================================================================
 
 X1<-data.frame(data1$X)
@@ -196,14 +195,14 @@ TdataCemob<-strptime(dataCemob$T, "%s")
 #datagrid<-datagrid/(1/n1)
 
 ## ==========================================================================
-#Détourage de la nappe
+#DÃ©tourage de la nappe
 ## ==========================================================================
 
 #n<-0.01
 
 #dataCemob[,3][(dataCemob[,3]<n)] <- 0
 
-##Supression des données 
+##Supression des donnÃ©es 
 #dataCemob[,3]!=0
 #dataCemob<-dataCemob[dataCemob[,3]!=0,]
 
@@ -212,7 +211,7 @@ TdataCemob<-strptime(dataCemob$T, "%s")
 #spheres3d(Plot,col=2,radius = 0.1)
 
 ## =======================================================================
-# Créer des objets STIDF
+# CrÃ©er des objets STIDF
 ## =======================================================================
 
 #Create a SpatialPointsDataFrame
@@ -342,7 +341,7 @@ plot(data8Nvario, m8)
 
 
 ## ==========================================================================
-#Détourage de la nappe
+#DÃ©tourage de la nappe
 ## ==========================================================================
 
 # to compare, recall the bubble plot above; those points were what there were values for. this is much more sparse
@@ -402,7 +401,7 @@ grid.arrange(data8NKriging1,data8NKriging2, ncol = 2)
 #data7[,3][(data7[,3]<n)] <- 0
 #data8[,3][(data8[,3]<n)] <- 0
 
-#Supression des données 
+#Supression des donnÃ©es 
 #data1[,3]!=0
 #data2[,3]!=0
 #data3[,3]!=0
